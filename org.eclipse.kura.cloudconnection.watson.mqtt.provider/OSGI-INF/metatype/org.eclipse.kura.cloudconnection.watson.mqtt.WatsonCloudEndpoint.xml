@@ -1,0 +1,77 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Copyright (c) 2018 Eurotech and/or its affiliates, and others
+
+     All rights reserved. This program and the accompanying materials
+     are made available under the terms of the Eclipse Public License v1.0
+     which accompanies this distribution, and is available at
+     http://www.eclipse.org/legal/epl-v10.html
+
+-->
+<MetaData xmlns="http://www.osgi.org/xmlns/metatype/v1.2.0" localization="en_us">
+    <OCD id="org.eclipse.kura.cloudconnection.watson.mqtt.WatsonCloudEndpoint"
+         name="CumulocityCloudConnectionService"
+         description="CloudConnectionService implementation for Watson">
+
+         <AD id="device.display.name"
+            name="Device display name"
+            type="String"
+            cardinality="0"
+            required="true"
+            default="DEVICE_NAME"
+            description="Friendly name of the device. Device name is the common name of the device (eg: Reliagate 20-25, Raspberry Pi, etc.). Hostname will use the linux hostname utility.
+                         Custom allows for defining a unique string. Server defined relies on the remote management server to define a name.">
+            <Option label="Set display name as device name" value="DEVICE_NAME" />
+            <Option label="Set display name from hostname" value="HOSTNAME" />
+            <Option label="Custom" value="CUSTOM" />
+        </AD>
+
+         <AD id="device.custom.name"
+            name="Device custom name"
+            type="String"
+            cardinality="0"
+            required="false"
+            default="kura-gateway"
+            description='Custom name for the device. This value is applied ONLY if device.display.name is set to "CUSTOM".'>
+        </AD>
+
+        <AD id="device.type"
+            name="Device type"
+            type="String"
+            cardinality="0"
+            required="false"
+            default="c8y_MQTTDevice"
+            description="The device type.">
+        </AD>
+
+         <AD id="publish.device.info"
+            name="Publish device info"
+            type="Boolean"
+            cardinality="0"
+            required="true"
+            default="true"
+            description="Whether or not to publish device information when the connection is enstablished."/>
+
+        <AD id="republish.position.on.gps.lock"
+            name="Republish position on GPS lock"
+            type="Boolean"
+            cardinality="0"
+            required="true"
+            default="true"
+            description="Whether or not to republish the device position on GPS lock event."/>
+
+        <AD id="republish.modem.info.on.modem.detect"
+            name="Republish modem info on modem detect"
+            type="Boolean"
+            cardinality="0"
+            required="true"
+            default="true"
+            description="Whether or not to republish modem information on modem detection event."/>
+
+    </OCD>
+
+    <Designate pid="org.eclipse.kura.cloudconnection.watson.mqtt.WatsonCloudEndpoint" factoryPid="org.eclipse.kura.cloudconnection.watson.mqtt.WatsonCloudEndpoint">
+        <Object ocdref="org.eclipse.kura.cloudconnection.watson.mqtt.WatsonCloudEndpoint"/>
+    </Designate>
+</MetaData>

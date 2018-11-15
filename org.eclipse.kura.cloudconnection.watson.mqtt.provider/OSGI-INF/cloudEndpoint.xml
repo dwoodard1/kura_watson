@@ -1,0 +1,41 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Copyright (c) 2011, 2018 Eurotech and/or its affiliates
+     All rights reserved. This program and the accompanying materials
+     are made available under the terms of the Eclipse Public License v1.0
+     which accompanies this distribution, and is available at
+     http://www.eclipse.org/legal/epl-v10.html
+    Contributors:
+      Eurotech
+-->
+<scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0" activate="activate" configuration-policy="require" deactivate="deactivate" enabled="true" immediate="true" modified="updated" name="org.eclipse.kura.cloudconnection.watson.mqtt.WatsonCloudEndpoint">
+	
+   <implementation class="org.eclipse.kura.cloudconnection.watson.mqtt.WatsonCloudEndpoint"/>
+   
+   <service>
+      <provide interface="org.eclipse.kura.cloudconnection.CloudEndpoint"/>
+      <provide interface="org.eclipse.kura.cloudconnection.CloudConnectionManager"/>
+      <provide interface="org.eclipse.kura.configuration.ConfigurableComponent"/>
+      <provide interface="org.osgi.service.event.EventHandler"/>
+   </service>
+   
+   <reference name="DataService"
+              interface="org.eclipse.kura.data.DataService"
+              policy="static"
+              cardinality="1..1"
+              bind="bindDataService"
+              unbind="unbindDataService"/>
+   <reference name="EventAdmin"
+              cardinality="1..1"
+              policy="static"
+              bind="bindEventAdmin"
+              unbind="unbindEventAdmin"
+              interface="org.osgi.service.event.EventAdmin"/>
+   
+   <property name="kura.ui.service.hide" type="Boolean" value="true"/>
+   <property name="kura.ui.factory.hide" type="String" value="true"/>
+   <property name="event.topics" type="String">org/eclipse/kura/position/locked
+org/eclipse/kura/net/modem/READY
+   </property>
+   
+</scr:component>

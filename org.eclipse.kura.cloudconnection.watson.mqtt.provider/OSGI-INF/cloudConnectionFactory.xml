@@ -1,0 +1,28 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+    Copyright (c) 2011, 2018 Eurotech and/or its affiliates
+     All rights reserved. This program and the accompanying materials
+     are made available under the terms of the Eclipse Public License v1.0
+     which accompanies this distribution, and is available at
+     http://www.eclipse.org/legal/epl-v10.html
+    Contributors:
+      Eurotech
+-->
+<scr:component xmlns:scr="http://www.osgi.org/xmlns/scr/v1.1.0"
+   name="org.eclipse.kura.cloudconnection.watson.mqtt.WatsonCloudConnectionFactory">
+   
+   <implementation class="org.eclipse.kura.cloudconnection.watson.mqtt.WatsonCloudConnectionFactory"/>
+   
+   <property name="osgi.command.scope" type="String" value="kura.cloud"/>
+   <property name="osgi.command.function" type="String">
+      createConfiguration
+   </property>
+   <property name="kura.ui.csf.pid.default" type="String" value="org.eclipse.kura.cloud.watson.mqtt.WatsonCloudEndpoint"/>
+   <property name="kura.ui.csf.pid.regex" type="String" value="^org.eclipse.kura.cloud.watson.mqtt.WatsonCloudEndpoint(-[a-zA-Z0-9]+)*$"/>
+   <property name="service.pid" type="String" value="org.eclipse.kura.cloudconnection.watson.mqtt.WatsonCloudConnectionFactory"/>
+   
+   <service>
+      <provide interface="org.eclipse.kura.cloudconnection.factory.CloudConnectionFactory"/>
+   </service>
+   <reference bind="bindConfigurationService" cardinality="1..1" interface="org.eclipse.kura.configuration.ConfigurationService" name="ConfigurationService" policy="static" unbind="unbindConfigurationService"/>
+</scr:component>

@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+
+    Copyright (c) 2018 Eurotech and/or its affiliates, and others
+
+     All rights reserved. This program and the accompanying materials
+     are made available under the terms of the Eclipse Public License v1.0
+     which accompanies this distribution, and is available at
+     http://www.eclipse.org/legal/epl-v10.html
+
+    Contributors:
+      Eurotech
+
+-->
+<MetaData xmlns="http://www.osgi.org/xmlns/metatype/v1.2.0" localization="en_us">
+    <OCD id="org.eclipse.kura.cloudconnection.watson.mqtt.publisher.WatsonPublisher"
+         name="WatsonPublisher"
+         description="CloudPublisher that allows to publish data to the IBM Watson cloud platform">
+
+        <AD id="topic"
+            name="Topic"
+            type="String"
+            cardinality="0"
+            required="true"
+            default="s/us"
+            description="The topic for published messages">
+        </AD>
+
+        <AD id="payload"
+            name="Payload"
+            type="String"
+            cardinality="0"
+            required="true"
+            default="200\,acceleration\,x\,${accel.x}\,$?{accel.x.unit}&#13;200\,acceleration\,y\,${accel.y}\,$?{accel.y.unit}&#13;200\,acceleration\,y\,${accel.z}\,$?{accel.z.unit}&#13;200\,temperature\,T\,${temperature}\,C"
+            description="Specifies the CSV content to be published, metric values can be substituted into CSV fields using the following syntax: ${metricName} (replacement with mandatory metric): replaces the content of the payload metric named metricName into the CSV field. If no matching metric is found, the CSV row will not be published. $?{metricName} (replacement with optional metric): performs the same replacement as ${metricName}, but if no matching metric is found, an empty field will be inserted and the row will be generated.|textArea">
+        </AD>
+
+    </OCD>
+
+    <Designate pid="org.eclipse.kura.cloudconnection.watson.mqtt.publisher.WatsonPublisher" factoryPid="org.eclipse.kura.cloudconnection.watson.mqtt.publisher.WatsonPublisher">
+        <Object ocdref="org.eclipse.kura.cloudconnection.watson.mqtt.publisher.WatsonPublisher"/>
+    </Designate>
+</MetaData>
