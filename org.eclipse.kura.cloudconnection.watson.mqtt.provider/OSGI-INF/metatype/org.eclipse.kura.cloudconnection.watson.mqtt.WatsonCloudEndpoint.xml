@@ -41,7 +41,7 @@
             type="String"
             cardinality="0"
             required="false"
-            default="c8y_MQTTDevice"
+            default="MQTTDevice"
             description="The device type.">
         </AD>
 

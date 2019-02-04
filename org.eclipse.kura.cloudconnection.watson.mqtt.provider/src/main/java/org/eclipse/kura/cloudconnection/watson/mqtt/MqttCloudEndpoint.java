@@ -1,20 +1,11 @@
 /*******************************************************************************
- * Copyright (c) 2011, 2018 Eurotech and/or its affiliates
- * 
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
- * 
- * Contributors:
- *      Eurotech
- ******************************************************************************/
+ * Copyright (c) 2011, 2019 Eurotech and/or its affiliates. All rights reserved.
+ *******************************************************************************/
+
 package org.eclipse.kura.cloudconnection.watson.mqtt;
 
-import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-import java.util.Map.Entry;
 import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -70,6 +61,10 @@ public class MqttCloudEndpoint implements CloudEndpoint, CloudConnectionManager,
     public void deactivateInternal() {
         this.dataService.removeDataServiceListener(this);
     }
+    
+    public DataService getDataService() {
+        return this.dataService;
+    }
 
     /*
      * CloudEndpoint Methods
@@ -79,12 +74,18 @@ public class MqttCloudEndpoint implements CloudEndpoint, CloudConnectionManager,
     public String publish(KuraMessage message) throws KuraException {
         final Map<String, Object> properties = message.getProperties();
 
-        final String topic = extract(properties, MqttCloudEndpointConstants.TOPIC.name(), String.class);
-        final int qos = extractOrDefault(properties, MqttCloudEndpointConstants.QOS.name(), 0);
-        final boolean retain = extractOrDefault(properties, MqttCloudEndpointConstants.RETAIN.name(), false);
-        final int priority = extractOrDefault(properties, MqttCloudEndpointConstants.PRIORITY.name(), 7);
-
-        return String.valueOf(this.dataService.publish(topic, message.getPayload().getBody(), qos, retain, priority));
+        final String topic = (String) properties.get(MqttCloudEndpointConstants.TOPIC.name());
+        final int qos = (Integer) properties.get(MqttCloudEndpointConstants.QOS.name());
+        
+        byte[] appPayload = encodePayload(message.getPayload());    
+        
+        int id = this.dataService.publish(topic, appPayload, qos, false, 7);
+        
+        if (qos == 0) {
+            return null;
+        }
+        
+        return String.valueOf(id);
     }
 
     @Override
@@ -194,14 +195,6 @@ public class MqttCloudEndpoint implements CloudEndpoint, CloudConnectionManager,
     @Override
     public void onMessageArrived(String topic, byte[] payload, int qos, boolean retained) {
         logger.debug("message arrived, topic: {} qos: {}", topic, qos);
-
-        final RawMessage rawMessage = new RawMessage(topic, payload, qos, retained);
-
-        for (Entry<String, List<CloudSubscriberListener>> e : this.registeredCloudSubscriberListeners.entrySet()) {
-            if (MqttTopicUtil.isMatched(e.getKey(), topic)) {
-                e.getValue().forEach(listener -> listener.onMessageArrived(rawMessage.toKuraMessage()));
-            }
-        }
     }
 
     @Override
@@ -220,6 +213,14 @@ public class MqttCloudEndpoint implements CloudEndpoint, CloudConnectionManager,
      * Private Methods
      * 
      */
+    private byte[] encodePayload(KuraPayload payload) {
+        return encodeJsonPayload(payload);
+    }
+
+    private byte[] encodeJsonPayload(KuraPayload kuraPayload) {
+        return CloudPayloadJsonEncoder.getBytes(kuraPayload);
+    }
+    
     @SuppressWarnings("unchecked")
     private static final <T> T extract(final Map<String, Object> properties, final String key, final Class<T> clazz)
             throws KuraException {
@@ -270,42 +271,6 @@ public class MqttCloudEndpoint implements CloudEndpoint, CloudConnectionManager,
             this.dataService.unsubscribe(topicFilter);
         } catch (final Exception e) {
             logger.warn("failed to unsubscribe", e);
-        }
-    }
-
-    private static class RawMessage {
-
-        private final String topic;
-        private final byte[] payload;
-        private final int qos;
-        private final boolean retained;
-
-        private KuraMessage message;
-
-        RawMessage(String topic, byte[] payload, int qos, boolean retained) {
-            this.topic = topic;
-            this.payload = payload;
-            this.qos = qos;
-            this.retained = retained;
-        }
-
-        public KuraMessage toKuraMessage() {
-            if (this.message != null) {
-                return this.message;
-            }
-
-            final Map<String, Object> messageProperties = new HashMap<>(3);
-
-            messageProperties.put(MqttCloudEndpointConstants.TOPIC.name(), this.topic);
-            messageProperties.put(MqttCloudEndpointConstants.QOS.name(), this.qos);
-            messageProperties.put(MqttCloudEndpointConstants.RETAIN.name(), this.retained);
-
-            final KuraPayload kuraPayload = new KuraPayload();
-            kuraPayload.setBody(this.payload);
-
-            this.message = new KuraMessage(kuraPayload, messageProperties);
-
-            return this.message;
         }
     }
 }

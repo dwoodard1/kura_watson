@@ -1,16 +1,10 @@
 /*******************************************************************************
- * Copyright (c) 2011, 2018 Eurotech and/or its affiliates
- * 
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
- * 
- * Contributors:
- *      Eurotech
- ******************************************************************************/
+ * Copyright (c) 2011, 2019 Eurotech and/or its affiliates. All rights reserved.
+ *******************************************************************************/
+
 package org.eclipse.kura.cloudconnection.watson.mqtt.publisher;
 
+import java.util.HashMap;
 import java.util.Map;
 import java.util.Set;
 import java.util.concurrent.CopyOnWriteArraySet;
@@ -21,6 +15,7 @@ import org.eclipse.kura.cloudconnection.listener.CloudConnectionListener;
 import org.eclipse.kura.cloudconnection.listener.CloudDeliveryListener;
 import org.eclipse.kura.cloudconnection.message.KuraMessage;
 import org.eclipse.kura.cloudconnection.publisher.CloudPublisher;
+import org.eclipse.kura.cloudconnection.watson.mqtt.MqttCloudEndpointConstants;
 import org.eclipse.kura.cloudconnection.watson.mqtt.WatsonCloudEndpoint;
 import org.eclipse.kura.configuration.ConfigurableComponent;
 import org.osgi.framework.BundleContext;
@@ -45,7 +40,7 @@ public class WatsonPublisher implements CloudPublisher, ConfigurableComponent, C
 
     private final Set<CloudConnectionListener> registeredCloudConnectionStatusListener = new CopyOnWriteArraySet<>();
     private final Set<CloudDeliveryListener> registeredCloudDeliveryListeners = new CopyOnWriteArraySet<>();
-
+    
     /*
      * OSGi Activation Methods
      * 
@@ -90,9 +85,13 @@ public class WatsonPublisher implements CloudPublisher, ConfigurableComponent, C
      */
 
     @Override
-    public String publish(KuraMessage arg0) throws KuraException {
-        // TODO Auto-generated method stub
-        return null;
+    public String publish(KuraMessage message) throws KuraException {
+        synchronized(this) {
+            Map<String, Object> publishMessageProps = new HashMap<>();
+            publishMessageProps.put(MqttCloudEndpointConstants.TOPIC.name(), this.options.getTopic());
+            publishMessageProps.put(MqttCloudEndpointConstants.QOS.name(), this.options.getQos());
+            return this.cloudConnectionService.publish(new KuraMessage(message.getPayload(), publishMessageProps));
+        }
     }
 
     @Override

@@ -1,14 +1,7 @@
 /*******************************************************************************
- * Copyright (c) 2011, 2018 Eurotech and/or its affiliates
- * 
- * All rights reserved. This program and the accompanying materials
- * are made available under the terms of the Eclipse Public License v1.0
- * which accompanies this distribution, and is available at
- * http://www.eclipse.org/legal/epl-v10.html
- * 
- * Contributors:
- *      Eurotech
- ******************************************************************************/
+ * Copyright (c) 2011, 2019 Eurotech and/or its affiliates. All rights reserved.
+ *******************************************************************************/
+
 package org.eclipse.kura.cloudconnection.watson.mqtt;
 
 import java.util.Collections;
@@ -37,8 +30,11 @@ public class WatsonCloudEndpoint extends MqttCloudEndpoint implements Configurab
     private EventAdmin eventAdmin;
 
     private ComponentContext ctx;
-    private boolean deviceInfoPublished;
     private WatsonCloudEndpointOptions options;
+    
+    private String imei;
+    private String iccid;
+    private String imsi;
 
     /*
      * Dependencies
@@ -73,6 +69,10 @@ public class WatsonCloudEndpoint extends MqttCloudEndpoint implements Configurab
         this.options = new WatsonCloudEndpointOptions(properties);
 
         super.activateInternal();
+        
+        if (super.getDataService().isConnected()) {
+            onConnectionEstablished();
+        }
     }
 
     public void updated(Map<String, Object> properties) {
@@ -94,17 +94,20 @@ public class WatsonCloudEndpoint extends MqttCloudEndpoint implements Configurab
      */
     @Override
     public void onConnectionEstablished() {
-        if (!this.deviceInfoPublished) {
-            try {
-                publishDeviceInfo();
-                this.deviceInfoPublished = true;
-            } catch (Exception e) {
-                logger.warn("Failed to publish device info", e);
-            }
-        }
-
         postConnectionStateChangeEvent(true);
         super.onConnectionEstablished();
+    }
+    
+    @Override
+    public void onConnectionLost(Throwable cause) {
+        super.onConnectionLost(cause);
+        postConnectionStateChangeEvent(false);
+    }
+
+    @Override
+    public void onDisconnected() {
+        super.onDisconnected();
+        postConnectionStateChangeEvent(false);
     }
 
     /*
@@ -114,9 +117,36 @@ public class WatsonCloudEndpoint extends MqttCloudEndpoint implements Configurab
     @Override
     public void handleEvent(Event event) {
         if (PositionLockedEvent.POSITION_LOCKED_EVENT_TOPIC.contains(event.getTopic())) {
-            // TODO: Publish data on GPS lock?
+            // if we get a position locked event,
+            // republish the birth certificate only if we are configured to
+            logger.info("Handling PositionLockedEvent");
+            if (isConnected() && this.options.shouldRepublishPositionOnGpsLock()) {
+                try {
+                    publishPosition();
+                } catch (Exception e) {
+                    logger.warn("Cannot publish position", e);
+                }
+            }
         } else if (ModemReadyEvent.MODEM_EVENT_READY_TOPIC.contains(event.getTopic())) {
-            // TODO: Publish data on Modem discovery?
+            logger.info("Handling ModemReadyEvent");
+            ModemReadyEvent modemReadyEvent = (ModemReadyEvent) event;
+            // keep these identifiers around until we can publish the certificate
+            this.imei = (String) modemReadyEvent.getProperty(ModemReadyEvent.IMEI);
+            this.imsi = (String) modemReadyEvent.getProperty(ModemReadyEvent.IMSI);
+            this.iccid = (String) modemReadyEvent.getProperty(ModemReadyEvent.ICCID);
+
+            if (isConnected() && this.options.shouldRepublishModemInfoOnModemDetect()) {
+                if (!((this.imei == null || this.imei.length() == 0 || this.imei.equals("ERROR"))
+                        && (this.imsi == null || this.imsi.length() == 0 || this.imsi.equals("ERROR"))
+                        && (this.iccid == null || this.iccid.length() == 0 || this.iccid.equals("ERROR")))) {
+                    logger.debug("handleEvent() :: publishing position ...");
+                    try {
+                        publishModemInfo();
+                    } catch (Exception e) {
+                        logger.warn("Cannot publish modem info", e);
+                    }
+                }
+            }
         }
     }
 
@@ -126,6 +156,14 @@ public class WatsonCloudEndpoint extends MqttCloudEndpoint implements Configurab
      */
     private void publishDeviceInfo() {
         // TODO: Implement birth information for Watson
+    }
+    
+    private void publishPosition() {
+        // TODO: Implement
+    }
+    
+    private void publishModemInfo() {
+     // TODO: Implement
     }
 
     private void postConnectionStateChangeEvent(final boolean isConnected) {
